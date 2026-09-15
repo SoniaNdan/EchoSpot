@@ -208,6 +208,7 @@ export function DashboardHeader() {
       </button>
       <button
         onClick={() => setSearchOpen(true)}
+        aria-label="Search projects, research, and contributors"
         className="flex items-center gap-2 h-9 px-3 rounded-lg bg-raised border border-border text-sm text-text-muted hover:border-border-strong transition-colors"
       >
         <Search className="h-4 w-4" />

@@ -103,6 +103,12 @@ export function PublicNav() {
               {link.label}
             </NavLink>
           ))}
+          <button
+            onClick={() => { navigate('/submit-project'); setMobileMenuOpen(false) }}
+            className="w-full text-left px-3 py-2.5 text-sm text-text-muted rounded-lg hover:text-text-primary hover:bg-raised"
+          >
+            Submit Project
+          </button>
           <button onClick={() => { setSearchOpen(true); setMobileMenuOpen(false) }} className="w-full text-left px-3 py-2.5 text-sm text-text-muted">
             Search
           </button>
