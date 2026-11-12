@@ -46,7 +46,8 @@ export function RoleGuard({
     return <Navigate to="/login" replace />
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  const userRoles = user.roles ?? [user.role]
+  if (!allowedRoles.some((role) => userRoles.includes(role))) {
     return <Navigate to={getDefaultDashboardPath(user.role)} replace />
   }
 

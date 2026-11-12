@@ -34,7 +34,9 @@ function getRoleNavigation(role?: UserRole): NavigationLink[] {
     ]
   }
 
-  if (role === 'admin') {
+  if (role === 'user') return sharedLinks
+
+  if (role === 'admin' || role === 'super_admin') {
     return [
       { to: '/admin', label: 'Admin Console', icon: LayoutDashboard },
       ...sharedLinks,
@@ -56,6 +58,8 @@ function getRoleLabel(role?: UserRole) {
       return 'Founder'
     case 'admin':
       return 'Admin'
+    case 'super_admin':
+      return 'Super admin'
     case 'researcher':
       return 'Researcher'
     case 'contributor':
@@ -177,7 +181,7 @@ export function AppSidebar({ collapsed }: { collapsed?: boolean }) {
               <p className="text-sm text-text-primary truncate">{user.name}</p>
 
               <p className="text-xs text-text-muted">
-                {user.role === 'contributor' || user.role === 'researcher'
+                {(user.role === 'contributor' || user.role === 'researcher') && user.level != null
                   ? `${getRoleLabel(user.role)} · Level ${user.level}`
                   : getRoleLabel(user.role)}
               </p>
@@ -325,7 +329,7 @@ export function MobileAppMenu() {
                 <p className="text-sm text-text-primary truncate">{user.name}</p>
 
                 <p className="text-xs text-text-muted">
-                  {user.role === 'contributor' || user.role === 'researcher'
+                  {(user.role === 'contributor' || user.role === 'researcher') && user.level != null
                     ? `${getRoleLabel(user.role)} · Level ${user.level}`
                     : getRoleLabel(user.role)}
                 </p>
@@ -373,10 +377,20 @@ export function MobileBottomNav() {
     { to: '/profile', icon: User, label: 'Profile' },
   ]
 
+  const memberLinks: NavigationLink[] = [
+    homeLink,
+    { to: '/discover', icon: Compass, label: 'Discover' },
+    { to: '/research', icon: BookOpen, label: 'Research' },
+    { to: '/contributors', icon: Users, label: 'Contributors' },
+    { to: '/profile', icon: User, label: 'Profile' },
+  ]
+
   const links =
-    user.role === 'founder'
+    user.role === 'user'
+      ? memberLinks
+      : user.role === 'founder'
       ? founderLinks
-      : user.role === 'admin'
+      : user.role === 'admin' || user.role === 'super_admin'
         ? adminLinks
         : contributorLinks
 

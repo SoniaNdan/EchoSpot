@@ -87,7 +87,7 @@ export default function App() {
         <Route
           path="dashboard/contributor"
           element={
-            <RoleGuard allowedRoles={['contributor', 'researcher']}>
+            <RoleGuard allowedRoles={['contributor', 'researcher', 'admin', 'super_admin']}>
               <Suspense fallback={<DashboardPageLoader />}>
                 <ContributorDashboardPage />
               </Suspense>
@@ -109,7 +109,7 @@ export default function App() {
         <Route
           path="founder"
           element={
-            <RoleGuard allowedRoles={['founder']}>
+            <RoleGuard allowedRoles={['founder', 'admin', 'super_admin']}>
               <Suspense fallback={<DashboardPageLoader />}>
                 <FounderConsolePage />
               </Suspense>
@@ -120,7 +120,7 @@ export default function App() {
         <Route
           path="admin"
           element={
-            <RoleGuard allowedRoles={['admin']}>
+            <RoleGuard allowedRoles={['admin', 'super_admin']}>
               <Suspense fallback={<DashboardPageLoader />}>
                 <AdminConsolePage />
               </Suspense>
