@@ -1,4 +1,4 @@
-import type { Notification, Reward, Campaign, AnalyticsPoint } from '@/types'
+﻿import type { Notification, Reward, Campaign, AnalyticsPoint } from '@/types'
 
 export const notifications: Notification[] = [
   {
@@ -32,7 +32,7 @@ export const notifications: Notification[] = [
     id: '4',
     category: 'campaigns',
     title: 'New Bounty Available',
-    message: 'EchoCheck Review: Nova Compute — 500 EchoPoints bounty now open.',
+    message: 'EchoCheck Review: Nova Compute â€” 500 EchoPoints bounty now open.',
     timestamp: '2026-02-11T14:20:00Z',
     read: false,
     link: '/rewards',
@@ -74,7 +74,7 @@ export const rewards: Reward[] = [
 ]
 
 export const campaigns: Campaign[] = [
-  { id: 'c1', title: 'Q1 Research Sprint', description: 'Focused research campaign on DePIN infrastructure projects', status: 'active', reach: 45000, engagement: 12.4, participants: 28, startDate: '2026-01-01', endDate: '2026-03-31' },
+  { id: 'c1', title: 'Q1 DePIN Visibility Sprint', description: 'Focused visibility and discovery campaign for DePIN infrastructure projects', status: 'active', reach: 45000, engagement: 12.4, participants: 28, startDate: '2026-01-01', endDate: '2026-03-31' },
   { id: 'c2', title: 'EchoCheck Awareness', description: 'Community education campaign about verification framework', status: 'active', reach: 82000, engagement: 8.7, participants: 156, startDate: '2026-01-15' },
   { id: 'c3', title: 'Founder Onboarding Drive', description: 'Outreach to early-stage Web3 founders for project submissions', status: 'completed', reach: 12000, engagement: 15.2, participants: 42, startDate: '2025-10-01', endDate: '2025-12-31' },
 ]
@@ -155,3 +155,4 @@ export const levelThresholds = [
   { level: 12, points: 40000 },
   { level: 13, points: 50000 },
 ]
+

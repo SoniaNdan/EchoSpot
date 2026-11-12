@@ -1,9 +1,10 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+﻿import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Menu, X, Search, Bell } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUI } from '@/contexts/UIContext'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { getDefaultDashboardPath } from '@/lib/roles'
 import logo from '@/assets/logo.png'
 
 const publicLinks = [
@@ -15,7 +16,7 @@ const publicLinks = [
 ]
 
 export function PublicNav() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { setSearchOpen, setMobileMenuOpen, mobileMenuOpen, unreadCount } = useUI()
   const navigate = useNavigate()
 
@@ -51,7 +52,7 @@ export function PublicNav() {
           >
             <Search className="h-4 w-4" />
             <span>Search</span>
-            <kbd className="text-xs bg-canvas px-1 rounded border border-border">⌘K</kbd>
+            <kbd className="text-xs bg-canvas px-1 rounded border border-border">âŒ˜K</kbd>
           </button>
 
           {isAuthenticated && (
@@ -68,7 +69,7 @@ export function PublicNav() {
           )}
 
           {isAuthenticated ? (
-            <Button size="sm" onClick={() => navigate('/dashboard/contributor')}>Dashboard</Button>
+            <Button size="sm" onClick={() => navigate(getDefaultDashboardPath(user?.role))}>Dashboard</Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Sign In</Button>
@@ -156,9 +157,10 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-border text-xs text-text-muted">
-          © 2026 EchoSpot. EchoCheck is a research framework, not a financial guarantee.
+          Â© 2026 EchoSpot. EchoCheck is a research framework, not a financial guarantee.
         </div>
       </div>
     </footer>
   )
 }
+

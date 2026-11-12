@@ -75,6 +75,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ProjectSubmission::class, 'submitted_by');
     }
 
+    public function researchArticles(): HasMany
+    {
+        return $this->hasMany(ResearchArticle::class, 'author_id');
+    }
+
+    public function contributions(): HasMany
+    {
+        return $this->hasMany(Contribution::class);
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('slug', $role)->exists();

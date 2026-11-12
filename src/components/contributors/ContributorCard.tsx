@@ -2,39 +2,29 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Avatar } from '@/components/ui/Avatar'
-import { formatNumber } from '@/lib/utils'
-import type { Contributor } from '@/types'
+import type { PublicContributor } from '@/services/contributorApi'
 import { contributorMetrics } from '@/data/contributorMetrics'
 
-export function ContributorCard({ contributor }: { contributor: Contributor }) {
+export function ContributorCard({ contributor }: { contributor: PublicContributor }) {
   return (
     <Card hover sheen>
       <div className="flex items-start gap-4">
         <Avatar src={contributor.avatar} name={contributor.name} size="lg" />
         <div className="flex-1 min-w-0">
-          <Link to={`/contributors/${contributor.id}`} className="font-heading font-semibold text-text-primary hover:text-echo-green transition-colors">
+          <Link to={`/contributors/${contributor.username}`} className="font-heading font-semibold text-text-primary hover:text-echo-green transition-colors">
             {contributor.name}
           </Link>
           <p className="text-xs text-text-muted">@{contributor.username}</p>
           <p className="text-sm text-text-muted mt-2 line-clamp-2">{contributor.bio}</p>
+          {contributor.roles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {contributor.roles.map((role) => <Badge key={role} variant="gold">{role}</Badge>)}
+            </div>
+          )}
           <div className="flex flex-wrap gap-1.5 mt-3">
             {contributor.skills.slice(0, 3).map((s) => (
-              <Badge key={s} variant="outline">{s}</Badge>
+              <Badge key={s.slug} variant="outline">{s.name}</Badge>
             ))}
-          </div>
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
-            <div>
-              <span className="text-xs text-text-muted">{contributorMetrics.reputation.label}</span>
-              <p className="font-mono text-sm text-accent-gold">{formatNumber(contributor.reputation)}</p>
-            </div>
-            <div>
-              <span className="text-xs text-text-muted">{contributorMetrics.echoPoints.label}</span>
-              <p className="font-mono text-sm text-text-primary">{formatNumber(contributor.echoPoints)}</p>
-            </div>
-            <div>
-              <span className="text-xs text-text-muted">{contributorMetrics.level.label}</span>
-              <p className="font-mono text-sm text-text-primary">{contributor.level}</p>
-            </div>
           </div>
         </div>
       </div>

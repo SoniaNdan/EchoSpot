@@ -6,7 +6,10 @@ use App\Models\Profile;
 use App\Models\Project;
 use App\Models\ProjectStatusHistory;
 use App\Models\ProjectSubmission;
+use App\Models\ResearchCategory;
 use App\Models\Role;
+use App\Models\Skill;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\UserPreference;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -21,6 +24,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach (['echo-intel' => 'Echo-Intel', 'project-spotlight' => 'Project Spotlight', 'founder-interview' => 'Founder Interview', 'narrative-breakdown' => 'Narrative Breakdown', 'ecosystem-analysis' => 'Ecosystem Analysis', 'educational-research' => 'Educational Research'] as $slug => $name) {
+            ResearchCategory::query()->updateOrCreate(['slug' => $slug], ['name' => $name]);
+        }
+
+        foreach (['infrastructure', 'defi', 'security', 'web3', 'analysis'] as $name) {
+            Tag::query()->firstOrCreate(['slug' => str($name)->slug()->toString()], ['name' => str($name)->title()->toString()]);
+        }
+
+        foreach (['Research', 'Technical Writing', 'Data Analysis', 'DeFi Analysis', 'Risk Assessment', 'UI Design', 'Community'] as $name) {
+            Skill::query()->firstOrCreate(['slug' => str($name)->slug()->toString()], ['name' => $name]);
+        }
+
         $roles = collect([
             ['slug' => 'user', 'name' => 'User'],
             ['slug' => 'contributor', 'name' => 'Contributor'],

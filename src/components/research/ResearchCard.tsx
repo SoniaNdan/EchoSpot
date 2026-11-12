@@ -33,7 +33,7 @@ export function ResearchCard({ article }: { article: ResearchArticle }) {
       </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-3">
-          <Badge variant="secondary">{researchTypeLabels[article.category]}</Badge>
+          <Badge variant="secondary">{article.categoryLabel || researchTypeLabels[article.category] || article.category}</Badge>
           <Badge variant="outline">{article.topic}</Badge>
         </div>
         <Link to={`/research/${article.slug}`} className="font-heading text-base font-semibold text-text-primary hover:text-echo-green transition-colors line-clamp-2">
@@ -74,7 +74,7 @@ export function ResearchCardCompact({ article }: { article: ResearchArticle }) {
     <Link to={`/research/${article.slug}`} className="flex gap-4 p-4 rounded-lg hover:bg-raised transition-colors group">
       <ResearchImage src={article.image} className="h-16 w-24 rounded-lg object-cover shrink-0" />
       <div className="flex-1 min-w-0">
-        <Badge variant="secondary" className="mb-1">{researchTypeLabels[article.category]}</Badge>
+        <Badge variant="secondary" className="mb-1">{article.categoryLabel || researchTypeLabels[article.category] || article.category}</Badge>
         <h4 className="text-sm font-medium text-text-primary group-hover:text-echo-green transition-colors line-clamp-1">{article.title}</h4>
         <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
           <Clock className="h-3 w-3" />

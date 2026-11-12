@@ -1,36 +1,90 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SearchInput, Select } from '@/components/ui/Input'
 import { ResearchCard } from '@/components/research/ResearchCard'
-import { EmptyState } from '@/components/ui/Progress'
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/Progress'
 import { Button } from '@/components/ui/Button'
-import { researchArticles, researchTypeLabels } from '@/data/research'
+import {
+  fetchResearchArticles,
+  fetchResearchCategories,
+  fetchResearchTags,
+  type ResearchArticlePage,
+  type ResearchCategory,
+  type ResearchTag,
+} from '@/services/researchApi'
+
+const emptyPage: ResearchArticlePage = {
+  articles: [],
+  pagination: { page: 1, per_page: 50, total: 0, total_pages: 1 },
+}
 
 export default function ResearchPage() {
   const [search, setSearch] = useState('')
-  const [topic, setTopic] = useState('all')
-  const [type, setType] = useState('all')
-  const [ecosystem, setEcosystem] = useState('all')
+  const [topic, setTopic] = useState('')
+  const [category, setCategory] = useState('')
+  const [ecosystem, setEcosystem] = useState('')
+  const [tag, setTag] = useState('')
+  const [page, setPage] = useState(1)
+  const [result, setResult] = useState(emptyPage)
+  const [categories, setCategories] = useState<ResearchCategory[]>([])
+  const [tags, setTags] = useState<ResearchTag[]>([])
+  const [topics, setTopics] = useState<string[]>([])
+  const [ecosystems, setEcosystems] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [filterError, setFilterError] = useState<string | null>(null)
+  const [retry, setRetry] = useState(0)
 
-  const topics = ['all', ...new Set(researchArticles.map((a) => a.topic))]
-  const ecosystems = ['all', ...new Set(researchArticles.map((a) => a.ecosystem))]
+  useEffect(() => {
+    const controller = new AbortController()
+
+    Promise.all([fetchResearchCategories(controller.signal), fetchResearchTags(controller.signal)])
+      .then(([categoryResults, tagResults]) => {
+        setCategories(categoryResults)
+        setTags(tagResults)
+        setFilterError(null)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setFilterError('Research filters could not be loaded.')
+      })
+
+    return () => controller.abort()
+  }, [retry])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setLoading(true)
+    setError(null)
+
+    fetchResearchArticles({ search: search.trim(), category, topic, ecosystem, tag, page }, controller.signal)
+      .then((pageResult) => {
+        setResult(pageResult)
+        setTopics((current) => [...new Set([...current, ...pageResult.articles.map((article) => article.topic).filter(Boolean)])].sort())
+        setEcosystems((current) => [...new Set([...current, ...pageResult.articles.map((article) => article.ecosystem).filter(Boolean)])].sort())
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError('Research articles could not be loaded. Check your connection and try again.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [search, category, topic, ecosystem, tag, page, retry])
 
   function clearFilters() {
     setSearch('')
-    setTopic('all')
-    setType('all')
-    setEcosystem('all')
+    setTopic('')
+    setCategory('')
+    setEcosystem('')
+    setTag('')
+    setPage(1)
   }
 
-  const filtered = useMemo(() => {
-    return researchArticles.filter((a) => {
-      if (search && !a.title.toLowerCase().includes(search.toLowerCase())) return false
-      if (topic !== 'all' && a.topic !== topic) return false
-      if (type !== 'all' && a.category !== type) return false
-      if (ecosystem !== 'all' && a.ecosystem !== ecosystem) return false
-      return true
-    })
-  }, [search, topic, type, ecosystem])
+  function updateFilter(setter: (value: string) => void, value: string) {
+    setter(value)
+    setPage(1)
+  }
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
@@ -40,25 +94,65 @@ export default function ResearchPage() {
       </motion.div>
 
       <div className="mt-8 space-y-4">
-        <SearchInput aria-label="Search research" placeholder="Search research..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Select aria-label="Filter by research topic" options={topics.map((t) => ({ value: t, label: t === 'all' ? 'All Topics' : t }))} value={topic} onChange={(e) => setTopic(e.target.value)} />
-          <Select aria-label="Filter by research type" options={[{ value: 'all', label: 'All Types' }, ...Object.entries(researchTypeLabels).map(([v, l]) => ({ value: v, label: l }))]} value={type} onChange={(e) => setType(e.target.value)} />
-          <Select aria-label="Filter by ecosystem" options={ecosystems.map((e) => ({ value: e, label: e === 'all' ? 'All Ecosystems' : e }))} value={ecosystem} onChange={(e) => setEcosystem(e.target.value)} />
+        <SearchInput aria-label="Search research" placeholder="Search research..." value={search} onChange={(event) => updateFilter(setSearch, event.target.value)} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <Select
+            aria-label="Filter by research topic"
+            options={[{ value: '', label: 'All Topics' }, ...topics.filter((value) => value !== topic).map((value) => ({ value, label: value })), ...(topic ? [{ value: topic, label: topic }] : [])]}
+            value={topic}
+            onChange={(event) => updateFilter(setTopic, event.target.value)}
+          />
+          <Select
+            aria-label="Filter by research category"
+            options={[{ value: '', label: 'All Categories' }, ...categories.map(({ slug, name }) => ({ value: slug, label: name }))]}
+            value={category}
+            onChange={(event) => updateFilter(setCategory, event.target.value)}
+          />
+          <Select
+            aria-label="Filter by ecosystem"
+            options={[{ value: '', label: 'All Ecosystems' }, ...ecosystems.filter((value) => value !== ecosystem).map((value) => ({ value, label: value })), ...(ecosystem ? [{ value: ecosystem, label: ecosystem }] : [])]}
+            value={ecosystem}
+            onChange={(event) => updateFilter(setEcosystem, event.target.value)}
+          />
+          <Select
+            aria-label="Filter by research tag"
+            options={[{ value: '', label: 'All Tags' }, ...tags.map(({ slug, name }) => ({ value: slug, label: name }))]}
+            value={tag}
+            onChange={(event) => updateFilter(setTag, event.target.value)}
+          />
         </div>
+        {filterError && (
+          <div className="flex items-center gap-3 text-sm text-error" role="alert">
+            <span>{filterError}</span>
+            <Button variant="outline" size="sm" onClick={() => setRetry((current) => current + 1)}>Try again</Button>
+          </div>
+        )}
       </div>
 
       <div className="mt-8">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <LoadingState message="Loading research..." />
+        ) : error ? (
+          <ErrorState title="Research unavailable" description={error} onRetry={() => setRetry((current) => current + 1)} />
+        ) : result.articles.length === 0 ? (
           <EmptyState
             title="No research found."
-            description="Try a different search, topic, type, or ecosystem."
+            description="Try a different search, topic, category, ecosystem, or tag."
             action={<Button variant="outline" size="sm" onClick={clearFilters}>Clear filters</Button>}
           />
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((a) => <ResearchCard key={a.id} article={a} />)}
-          </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {result.articles.map((article) => <ResearchCard key={article.id} article={article} />)}
+            </div>
+            {result.pagination.total_pages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-4">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</Button>
+                <span className="text-sm text-text-muted">Page {result.pagination.page} of {result.pagination.total_pages}</span>
+                <Button variant="outline" size="sm" disabled={page >= result.pagination.total_pages} onClick={() => setPage((current) => current + 1)}>Next</Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -16,7 +16,7 @@ export type NotificationCategory =
   | 'mentions'
   | 'rewards'
   | 'system'
-export type UserRole = 'contributor' | 'founder' | 'admin' | 'researcher'
+export type UserRole = 'user' | 'contributor' | 'researcher' | 'founder' | 'admin' | 'super_admin'
 
 export interface EchoScore {
   overall: number
@@ -92,7 +92,8 @@ export interface ResearchArticle {
   authorAvatar: string
   date: string
   readTime: number
-  category: ResearchType
+  category: string
+  categoryLabel?: string
   topic: string
   ecosystem: string
   status: 'published' | 'draft' | 'review'
@@ -187,10 +188,12 @@ export interface User {
   username: string
   avatar: string
   role: UserRole
+  roles?: string[]
+  status?: string
   walletAddress?: string
-  echoPoints: number
-  level: number
-  reputation: number
+  echoPoints?: number
+  level?: number
+  reputation?: number
 }
 
 export interface SearchResult {

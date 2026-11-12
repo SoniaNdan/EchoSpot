@@ -2,10 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\Contribution;
+use App\Models\Profile;
 use App\Models\Project;
 use App\Models\ProjectSubmission;
+use App\Models\ResearchArticle;
+use App\Policies\ContributionPolicy;
+use App\Policies\ProfilePolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ProjectSubmissionPolicy;
+use App\Policies\ResearchArticlePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(ProjectSubmission::class, ProjectSubmissionPolicy::class);
+        Gate::policy(ResearchArticle::class, ResearchArticlePolicy::class);
+        Gate::policy(Profile::class, ProfilePolicy::class);
+        Gate::policy(Contribution::class, ContributionPolicy::class);
 
         Gate::define('access-contributor', fn ($user): bool => $user->hasAnyRole(['contributor', 'researcher', 'admin', 'super_admin']));
         Gate::define('access-founder', fn ($user): bool => $user->hasAnyRole(['founder', 'admin', 'super_admin']));
