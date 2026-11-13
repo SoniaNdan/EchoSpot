@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AIController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AuthorizationProbeController;
 use App\Http\Controllers\Api\V1\ContributionController;
@@ -12,6 +13,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class);
+
+    Route::prefix('ai')->middleware(['auth:sanctum', 'account.access', 'account.active', 'ai.pro'])->group(function (): void {
+        Route::get('/conversations', [AIController::class, 'index']);
+        Route::post('/conversations', [AIController::class, 'store']);
+        Route::get('/conversations/{conversation}', [AIController::class, 'show'])->whereNumber('conversation');
+        Route::post('/conversations/{conversation}/messages', [AIController::class, 'message'])
+            ->whereNumber('conversation')->middleware('throttle:ai-generation');
+        Route::get('/usage', [AIController::class, 'usage']);
+    });
 
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/projects/{project:slug}', [ProjectController::class, 'show']);

@@ -12,6 +12,8 @@ use App\Policies\ProfilePolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\ProjectSubmissionPolicy;
 use App\Policies\ResearchArticlePolicy;
+use App\Services\AI\AIProviderInterface;
+use App\Services\AI\OpenAIProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(AIProviderInterface::class, OpenAIProvider::class);
     }
 
     /**
@@ -49,5 +51,6 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth-forgot-password', fn (Request $request) => Limit::perMinute(3)->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('auth-reset-password', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('auth-email-verification', fn (Request $request) => Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())));
+        RateLimiter::for('ai-generation', fn (Request $request) => Limit::perMinute((int) config('ai.rate_limit_per_minute', 10))->by('ai-user:'.($request->user()?->id ?? $request->ip())));
     }
 }

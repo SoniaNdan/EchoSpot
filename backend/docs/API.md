@@ -79,3 +79,17 @@ Project transitions: `draft -> submitted`; `submitted -> under_review`; `under_r
 | POST | `/contributions/{id}/review` | Admin/super_admin other than author |
 
 Article states are `draft -> submitted -> under_review -> changes_requested -> submitted`, with `under_review -> approved|rejected` and `approved -> published`. Contribution states omit publication: approval makes a contribution eligible for its public profile. Authors see their own review notes; public resources omit notes, reviewer identity, and history. Article content is stored as plain text/Markdown after HTML tags are stripped. API pagination defaults to 20 and caps at 50.
+
+## EchoSpot AI
+
+All AI routes require a Sanctum bearer token, an active account, and a current active Pro subscription whose monthly billing period includes the request time. Free accounts have no subscription row and receive `403 PRO_SUBSCRIPTION_REQUIRED`. AI generation is limited to 10 requests per user per minute and 500,000 combined input/output tokens per current subscription period.
+
+| Method | Path | Contract |
+| --- | --- | --- |
+| GET | `/ai/conversations` | Current user's paginated conversation summaries (`page`, `per_page`, `total`, `total_pages` in `meta`). |
+| POST | `/ai/conversations` | Optional `{ "title": string }`; returns `201` with `data.conversation`. |
+| GET | `/ai/conversations/{id}` | Owner-scoped conversation and its latest 100 ordered messages. Other users receive `404`. |
+| POST | `/ai/conversations/{id}/messages` | `{ "content": string }`; returns `201` with `data.user_message`, `data.assistant_message`, actual published `data.sources`, and subscription-period `data.usage`. Max user message length is 8,000 characters. |
+| GET | `/ai/usage` | Current Pro plan and subscription-period input, output, combined tokens, limit, and remaining allowance. |
+
+Pro subscription records are provisioned or updated through controlled database/admin operations; there is no public activation endpoint or payment integration. OpenAI credentials remain in backend environment configuration. EchoSpot stores conversation messages and usage; Responses API requests use `store: false`. Conversations inactive for 90 days are removed by the scheduled `ai:prune-conversations` command; their messages cascade-delete while token usage records remain with a null conversation reference.

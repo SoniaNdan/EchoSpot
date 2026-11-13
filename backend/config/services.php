@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-6-luna'),
+        'responses_url' => 'https://api.openai.com/v1/responses',
+        'connect_timeout' => (int) env('OPENAI_CONNECT_TIMEOUT', 10),
+        'timeout' => (int) env('OPENAI_TIMEOUT', 45),
+    ],
+
 ];

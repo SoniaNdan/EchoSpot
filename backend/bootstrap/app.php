@@ -2,7 +2,11 @@
 
 use App\Http\Middleware\EnsureAccountCanAccessApi;
 use App\Http\Middleware\EnsureActiveAccount;
+use App\Http\Middleware\RequireActiveProSubscription;
 use App\Http\Middleware\RequireRole;
+use App\Services\AI\AIProSubscriptionRequiredException;
+use App\Services\AI\AIProviderException;
+use App\Services\AI\AIQuotaExceededException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,9 +29,46 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RequireRole::class,
             'account.access' => EnsureAccountCanAccessApi::class,
             'account.active' => EnsureActiveAccount::class,
+            'ai.pro' => RequireActiveProSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AIProSubscriptionRequiredException $exception, Request $request): ?JsonResponse {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'PRO_SUBSCRIPTION_REQUIRED', 'message' => $exception->getMessage()],
+            ], 403);
+        });
+
+        $exceptions->render(function (AIQuotaExceededException $exception, Request $request): ?JsonResponse {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'AI_MONTHLY_LIMIT_REACHED', 'message' => $exception->getMessage()],
+            ], 429);
+        });
+
+        $exceptions->render(function (AIProviderException $exception, Request $request): ?JsonResponse {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => $exception->errorCode,
+                    'message' => 'EchoSpot AI is temporarily unavailable. Please try again later.',
+                ],
+            ], 503);
+        });
+
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $exception): bool {
             return $request->is('api/*') || $request->expectsJson();
         });
@@ -46,14 +87,24 @@ return Application::configure(basePath: dirname(__DIR__))
             $status = $exception instanceof HttpExceptionInterface
                 ? $exception->getStatusCode()
                 : 500;
+            $errorCode = match ($status) {
+                404 => 'NOT_FOUND',
+                403 => 'FORBIDDEN',
+                429 => 'RATE_LIMITED',
+                default => 'SERVER_ERROR',
+            };
+            $message = match ($status) {
+                404 => 'The requested API endpoint was not found.',
+                403 => 'You are not authorized to perform this action.',
+                429 => 'Too many requests. Please try again later.',
+                default => 'An unexpected server error occurred.',
+            };
 
             return response()->json([
                 'success' => false,
                 'error' => [
-                    'code' => $status === 404 ? 'NOT_FOUND' : ($status === 403 ? 'FORBIDDEN' : 'SERVER_ERROR'),
-                    'message' => $status === 404
-                        ? 'The requested API endpoint was not found.'
-                        : ($status === 403 ? 'You are not authorized to perform this action.' : 'An unexpected server error occurred.'),
+                    'code' => $errorCode,
+                    'message' => $message,
                 ],
             ], $status);
         });
